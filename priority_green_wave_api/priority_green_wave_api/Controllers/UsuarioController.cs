@@ -137,6 +137,7 @@ namespace priority_green_wave_api.Controllers
                     var token = TokenService.CreateToken(user.Id);
                     return Ok(new LoginResponseDTO()
                     {
+                        Id = user.Id,
                         Nome = user.Nome,
                         Email = user.Email,
                         Token = token
