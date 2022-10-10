@@ -45,6 +45,7 @@ namespace priority_green_wave_api.Repository
         public void Update(Usuario usuario)
         {
             _context.usuario.Update(usuario);
+            _context.SaveChanges();
         }
         public void Delete(Usuario usuario)
         {
