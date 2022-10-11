@@ -1,5 +1,6 @@
 ﻿using priority_green_wave_api.Model;
 using priority_green_wave_api.DTOs;
+using Microsoft.EntityFrameworkCore;
 
 namespace priority_green_wave_api.Repository
 {
@@ -17,7 +18,8 @@ namespace priority_green_wave_api.Repository
         }
         public Usuario Read(int id)
         {
-            var usuario = _context.usuario.Where(usuario => usuario.Id == id).FirstOrDefault();
+            
+            var usuario = _context.usuario.AsNoTracking().Where(usuario => usuario.Id == id).FirstOrDefault();
 
             if (usuario != null)
             {

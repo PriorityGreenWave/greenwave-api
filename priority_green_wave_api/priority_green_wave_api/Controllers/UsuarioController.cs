@@ -23,35 +23,24 @@ namespace priority_green_wave_api.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("ReadUsuario")]
-        public IActionResult ReadUsuario([FromHeader] string authorization)
+        public IActionResult ReadUsuario([FromBody] Usuario usuario)
         {
             try
-            {
-                if (AuthenticationHeaderValue.TryParse(authorization, out var headerValue))
+            {  
+                var usuarioRetorno = _usuarioRepository.Read(usuario.Id);
+                if (usuarioRetorno.Id != -1)
                 {
-                    var scheme = headerValue.Scheme;
-                    var parameter = headerValue.Parameter;
-                    var token = TokenService.DecodeToken(parameter);
-                    var usuario = _usuarioRepository.Read(int.Parse(token));
-                    if (usuario.Id != 0)
-                    {
-                        return Ok(usuario);
-                    }
-                    else
-                    {
-                        return BadRequest(new ErrorReturnDTO()
-                        {
-                            Error = "Invalid usuario ID!",
-                            StatusCode = StatusCodes.Status400BadRequest
-                        });
-                    }
+                    return Ok(usuarioRetorno);
                 }
+                else
+                {
                 return BadRequest(new ErrorReturnDTO()
                 {
                     Error = "Invalid usuario ID!",
-                    StatusCode = StatusCodes.Status400BadRequest
-                });
+                    StatusCode = StatusCodes.Status400BadRequest});
+                }                    
             }
             catch (Exception ex)
             {
@@ -164,6 +153,7 @@ namespace priority_green_wave_api.Controllers
         }
 
         [HttpPut]
+        [AllowAnonymous]
         [Route("UpdateUsuario")]
         public IActionResult UpdateUsuario([FromBody] Usuario usuario)
         {
@@ -171,20 +161,56 @@ namespace priority_green_wave_api.Controllers
             {
                 usuario.Senha = MD5Utils.GetHashMD5(usuario.Senha);
                 var usuarioDadosAntigos = _usuarioRepository.Read(usuario.Id);
+                
+                if(usuarioDadosAntigos.Id != -1)
+                {
+                    Usuario usuarioDadosNovos = new Usuario();
+                    usuarioDadosNovos.Id = usuarioDadosAntigos.Id;
 
-                Usuario usuarioDadosNovos = new Usuario();
-                usuarioDadosNovos.Id = usuarioDadosAntigos.Id;
+                    usuarioDadosNovos.Nome = usuario.Nome != usuarioDadosAntigos.Nome ? usuario.Nome : usuarioDadosAntigos.Nome;
+                    usuarioDadosNovos.Cpf = usuario.Cpf != usuarioDadosAntigos.Cpf ? usuario.Cpf : usuarioDadosAntigos.Cpf;
+                    usuarioDadosNovos.DataNascimento = usuario.DataNascimento != usuarioDadosAntigos.DataNascimento ? usuario.DataNascimento : usuarioDadosAntigos.DataNascimento;
+                    usuarioDadosNovos.Telefone = usuario.Telefone != usuarioDadosAntigos.Telefone ? usuario.Telefone : usuarioDadosAntigos.Telefone;
+                    usuarioDadosNovos.Senha = usuario.Senha != usuarioDadosAntigos.Senha ? usuario.Senha : usuarioDadosAntigos.Senha;
+                    usuarioDadosNovos.MotoristaEmergencia = usuario.MotoristaEmergencia != usuarioDadosAntigos.MotoristaEmergencia ? usuario.MotoristaEmergencia : usuarioDadosAntigos.MotoristaEmergencia;
+                    usuarioDadosNovos.Email = (usuario.Email != usuarioDadosAntigos.Email) && (!_usuarioRepository.CheckEmail(usuario.Email)) ? usuario.Email : usuarioDadosAntigos.Email;
 
-                usuarioDadosNovos.Nome = usuario.Nome != usuarioDadosAntigos.Nome ? usuario.Nome : usuarioDadosAntigos.Nome;
-                usuarioDadosNovos.Cpf = usuario.Cpf != usuarioDadosAntigos.Cpf ? usuario.Cpf : usuarioDadosAntigos.Cpf;
-                usuarioDadosNovos.DataNascimento = usuario.DataNascimento != usuarioDadosAntigos.DataNascimento ? usuario.DataNascimento : usuarioDadosAntigos.DataNascimento;
-                usuarioDadosNovos.Telefone = usuario.Telefone != usuarioDadosAntigos.Telefone ? usuario.Telefone : usuarioDadosAntigos.Telefone;
-                usuarioDadosNovos.Senha = usuario.Senha != usuarioDadosAntigos.Senha ? usuario.Senha : usuarioDadosAntigos.Senha;
-                usuarioDadosNovos.MotoristaEmergencia = usuario.MotoristaEmergencia != usuarioDadosAntigos.MotoristaEmergencia ? usuario.MotoristaEmergencia : usuarioDadosAntigos.MotoristaEmergencia;
-                usuarioDadosNovos.Email = (usuario.Email != usuarioDadosAntigos.Email) && (!_usuarioRepository.CheckEmail(usuario.Email)) ? usuario.Email : usuarioDadosAntigos.Email;
-
-                _usuarioRepository.Update(usuarioDadosNovos);
-                return Ok(usuarioDadosNovos);
+                    _usuarioRepository.Update(usuarioDadosNovos);
+                    return Ok(usuarioDadosNovos);
+                }
+                else
+                {
+                    return BadRequest();
+                } 
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("An error ocurred!", ex, usuario);
+                return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
+                {
+                    Error = "An login error ocurred!",
+                    StatusCode = StatusCodes.Status500InternalServerError
+                });
+            }
+        }
+        
+        [HttpDelete]
+        [AllowAnonymous]
+        [Route("DeleteUsuario")]
+        public IActionResult DeleteUsuario([FromBody] Usuario usuario)
+        {
+            try
+            {
+                var usuario_delete = _usuarioRepository.Read(usuario.Id);
+                if (usuario_delete.Id != -1)
+                {
+                    _usuarioRepository.Delete(usuario_delete);
+                    return Ok(usuario_delete);
+                }
+                else
+                {
+                    return BadRequest();
+                }               
             }
             catch (Exception ex)
             {
