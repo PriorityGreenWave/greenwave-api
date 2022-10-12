@@ -26,7 +26,7 @@ namespace priority_green_wave_api.Repository
                 return new Catadioptrico()
                 {
                     Id = catadioptrico.Id,
-                    Localizacao = catadioptrico.Localizacao
+                    
                 };
             }
             else

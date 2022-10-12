@@ -11,10 +11,11 @@ namespace priority_green_wave_api.Repository
         {
             _context = context;
         }
-        public void Create(Usuario usuario)
+        public int Create(Usuario usuario)
         {
             _context.usuario.Add(usuario);
             _context.SaveChanges();
+            return usuario.Id;
         }
         public Usuario Read(int id)
         {

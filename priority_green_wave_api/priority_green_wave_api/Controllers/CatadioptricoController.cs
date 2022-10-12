@@ -9,6 +9,8 @@ using System.Net.Http.Headers;
 using System.Text.RegularExpressions;
 namespace priority_green_wave_api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]/")]
     public class CatadioptricoController : ControllerBase
     {
         private readonly ILogger<CatadioptricoController> _logger;
@@ -42,7 +44,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -54,16 +56,16 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateCatadioptrico")]
-        public IActionResult CreateCatadioptrico([FromBody] CatadioptricoDTO catadioptrico)
+        public IActionResult CreateCatadioptrico([FromBody] Catadioptrico catadioptrico)
         {
             try
             {
-                _catadioptricoRepository.Create(new Catadioptrico(catadioptrico));
+                _catadioptricoRepository.Create(catadioptrico);
                 return Ok(new { msg = "catadioptrico created successfully!" });
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -75,7 +77,7 @@ namespace priority_green_wave_api.Controllers
         [HttpPut]
         [AllowAnonymous]
         [Route("UpdateCatadioptrico")]
-        public IActionResult UpdateCatadioptrico([FromBody] CatadioptricoDTO catadioptrico)
+        public IActionResult UpdateCatadioptrico([FromBody] Catadioptrico catadioptrico)
         {
             try
             {
@@ -85,7 +87,7 @@ namespace priority_green_wave_api.Controllers
                     Catadioptrico catadioptricoNovo = new Catadioptrico();
 
                     catadioptricoNovo.Id = catadioptricoAntigo.Id;
-                    catadioptricoNovo.Localizacao.Id = catadioptrico.Id != catadioptricoAntigo.Localizacao.Id ? catadioptrico.Id : catadioptricoAntigo.Localizacao.Id;
+                    
                     _catadioptricoRepository.Update(catadioptricoNovo);
                     return Ok(catadioptricoNovo);
                 }
@@ -97,7 +99,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, catadioptrico);
+                _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",
@@ -109,7 +111,7 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteCatadioptrico")]
-        public IActionResult DeleteCatadioptrico([FromBody] CatadioptricoDTO catadioptrico)
+        public IActionResult DeleteCatadioptrico([FromBody] Catadioptrico catadioptrico)
         {
             try
             {
@@ -126,7 +128,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, catadioptrico);
+                _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",

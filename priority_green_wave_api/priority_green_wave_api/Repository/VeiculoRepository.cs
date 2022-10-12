@@ -10,10 +10,11 @@ namespace priority_green_wave_api.Repository
         {
             _context = context;
         }
-        public void Create(Veiculo veiculo)
+        public int Create(Veiculo veiculo)
         {
             _context.veiculo.Add(veiculo);
             _context.SaveChanges();
+            return veiculo.Id;
         }
         public Veiculo Read(int id)
         {
@@ -43,6 +44,32 @@ namespace priority_green_wave_api.Repository
                 };
             }
 
+        }
+        public bool CheckPlaca(string placa)
+        {
+            var veiculo = _context.veiculo.AsNoTracking().Where(veiculo => veiculo.Placa == placa).FirstOrDefault();
+
+            if (veiculo != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+        public bool CheckRfid(string Rfid)
+        {
+            var veiculo = _context.veiculo.AsNoTracking().Where(veiculo => veiculo.Rfid == Rfid).FirstOrDefault();
+
+            if (veiculo != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
         }
         public void Update(Veiculo veiculo)
         {

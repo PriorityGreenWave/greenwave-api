@@ -6,26 +6,34 @@ using priority_green_wave_api.Repository;
 
 namespace priority_green_wave_api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]/")]
     public class VeiculoController : BaseController
     {
         private readonly ILogger<VeiculoController> _logger;
         private readonly VeiculoRepository _veiculoRepository;
-        public VeiculoController(ILogger<VeiculoController> logger, VeiculoRepository veiculoRepository)
+        private readonly UsuarioRepository _usuarioRepository;
+        private readonly VeiculoUsuarioRepository _veiculoUsuarioRepository;
+        public VeiculoController(ILogger<VeiculoController> logger, VeiculoRepository veiculoRepository, UsuarioRepository usuarioRepository, VeiculoUsuarioRepository veiculoUsuarioRepository)
         {
             _logger = logger;
             _veiculoRepository = veiculoRepository;
+            _usuarioRepository = usuarioRepository;
+            _veiculoUsuarioRepository = veiculoUsuarioRepository;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("ReadVeiculo")]
-        public IActionResult ReadVeiculo([FromBody] Veiculo veiculo)
+        public IActionResult ReadVeiculo([FromQuery] int IdVeiculo)
         {
             try
             {
-                var retornoVeiculo = _veiculoRepository.Read(veiculo.Id);
+                var retornoVeiculo = _veiculoRepository.Read(IdVeiculo);
+                var retornoVeiculoUsuario = _veiculoUsuarioRepository.ReadIdVeiculo(IdVeiculo);
                 if (retornoVeiculo.Id != -1)
                 {
-                    return Ok(retornoVeiculo);
+                    return Ok(retornoVeiculoUsuario);
                 }
                 else
                 {
@@ -39,7 +47,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -51,16 +59,55 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateVeiculo")]
-        public IActionResult CreateVeiculo([FromBody] VeiculoDTO veiculo)
+        public IActionResult CreateVeiculo([FromBody] VeiculoRequestDTO veiculoRequest)
         {
             try
             {
-                _veiculoRepository.Create(new Veiculo(veiculo));
-                return Ok(new { msg = "veiculo created successfully!" });
+                Veiculo veiculo = new Veiculo();
+                VeiculoUsuario veiculoUsuario = new VeiculoUsuario();
+                var usuario = _usuarioRepository.Read(veiculoRequest.IdUsuario);
+                var erros = new List<string>();
+
+                if (_veiculoRepository.CheckPlaca(veiculoRequest.Placa)){
+                    erros.Add("A placa informada já foi cadastrada no sistema.");
+                }
+                if (_veiculoRepository.CheckRfid(veiculoRequest.Rfid))
+                {
+                    erros.Add("O Rfid informado já foi cadastrada no sistema.");
+                }
+                if (usuario.Id == -1)
+                {
+                    erros.Add("Usuário não cadastrado na base");
+                }
+                if (erros.Count > 0)
+                {
+                    return BadRequest(new ErrorReturnDTO()
+                    {
+                        Errors = erros,
+                        StatusCode = StatusCodes.Status400BadRequest
+                    });
+                }
+                else
+                {
+                    veiculo.Placa = veiculoRequest.Placa;
+                    veiculo.Rfid = veiculoRequest.Rfid;
+                    veiculo.Fabricante = veiculoRequest.Fabricante;
+                    veiculo.Modelo = veiculoRequest.Modelo;
+                    veiculo.Ano = veiculoRequest.Ano;
+                    veiculo.TipoVeiculo = veiculoRequest.TipoVeiculo;
+                    veiculo.VeiculoEmergencia = veiculoRequest.VeiculoEmergencia;
+                    veiculo.EstadoEmergencia = veiculoRequest.EstadoEmergencia;
+                    int veiculoId = _veiculoRepository.Create(veiculo);
+
+                    veiculoUsuario.IdVeiculo = veiculoId;
+                    veiculoUsuario.IdUsuario = usuario.Id;
+                    _veiculoUsuarioRepository.Create(veiculoUsuario);
+                    return Ok(veiculoUsuario);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -72,7 +119,7 @@ namespace priority_green_wave_api.Controllers
         [HttpPut]
         [AllowAnonymous]
         [Route("UpdateVeiculo")]
-        public IActionResult UpdateVeiculo([FromBody] VeiculoDTO veiculo)
+        public IActionResult UpdateVeiculo([FromBody] Veiculo veiculo)
         {
             try
             {
@@ -102,7 +149,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, veiculo);
+                _logger.LogError("Um erro ocorreu!", ex, veiculo);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",
@@ -114,15 +161,17 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteVeiculo")]
-        public IActionResult DeleteVeiculo([FromBody] VeiculoDTO veiculo)
+        public IActionResult DeleteVeiculo([FromQuery] int IdVeiculo)
         {
             try
             {
-                var veiculo_delete = _veiculoRepository.Read(veiculo.Id);
-                if (veiculo_delete.Id != -1)
+                var veiculoDelete = _veiculoRepository.Read(IdVeiculo);
+                var veiculoUsuario = _veiculoUsuarioRepository.ReadIdVeiculo(IdVeiculo);
+                if (veiculoDelete.Id != -1)
                 {
-                    _veiculoRepository.Delete(veiculo_delete);
-                    return Ok(veiculo_delete);
+                    _veiculoRepository.Delete(veiculoDelete);
+                    _veiculoUsuarioRepository.Delete(veiculoUsuario);
+                    return Ok(veiculoDelete);
                 }
                 else
                 {
@@ -131,7 +180,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, veiculo);
+                _logger.LogError("Um erro ocorreu!", ex, IdVeiculo);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",
@@ -143,14 +192,22 @@ namespace priority_green_wave_api.Controllers
         [HttpGet]
         [AllowAnonymous]
         [Route("EstadoEmergencia")]
-        public IActionResult EstadoEmergencia([FromBody] string Rfid)
+        public IActionResult EstadoEmergencia([FromQuery] string Rfid)
         {
             try
             {
                 var veiculo = _veiculoRepository.ReadRfid(Rfid);
                 if (veiculo.Id != -1)
                 {
-                    return Ok(veiculo.EstadoEmergencia);
+                    bool retorno = false;
+                    if (veiculo.VeiculoEmergencia)
+                    {
+                        if (veiculo.EstadoEmergencia)
+                        {
+                            retorno = true;
+                        }
+                    }
+                    return Ok(retorno);
                 }
                 else
                 {
@@ -159,7 +216,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",

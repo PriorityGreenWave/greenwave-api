@@ -20,5 +20,6 @@ namespace priority_green_wave_api.Model
         public DbSet<Usuario> usuario { get; set; }
         public DbSet<Veiculo> veiculo { get; set; }
         public DbSet<Area> area { get; set; }
+        public DbSet<VeiculoUsuario> veiculoUsuario { get; set; }
     }
 }

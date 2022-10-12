@@ -1,11 +1,7 @@
-﻿using priority_green_wave_api.DTOs;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace priority_green_wave_api.Model
+﻿namespace priority_green_wave_api.DTOs
 {
-    public class Veiculo
+    public class VeiculoRequestDTO
     {
-        public int Id { get; set; }
         public string Placa { get; set; }
         public string Rfid { get; set; }
         public string Fabricante { get; set; }
@@ -13,6 +9,7 @@ namespace priority_green_wave_api.Model
         public int Ano { get; set; }
         public string TipoVeiculo { get; set; }
         public bool VeiculoEmergencia { get; set; }
-        public bool EstadoEmergencia { get; set; }  
+        public bool EstadoEmergencia { get; set; }
+        public int IdUsuario { get; set; }
     }
 }

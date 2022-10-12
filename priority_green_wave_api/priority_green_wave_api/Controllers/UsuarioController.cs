@@ -16,35 +16,40 @@ namespace priority_green_wave_api.Controllers
     {
         private readonly ILogger<UsuarioController> _logger;
         private readonly UsuarioRepository _usuarioRepository;
-        public UsuarioController(ILogger<UsuarioController> logger, UsuarioRepository usuarioRepository)
+        private readonly VeiculoUsuarioRepository _veiculoUsuarioRepository;
+        private readonly VeiculoRepository _veiculoRepository;
+
+        public UsuarioController(ILogger<UsuarioController> logger, UsuarioRepository usuarioRequestRepository, VeiculoUsuarioRepository veiculoUsuarioRepository, VeiculoRepository veiculoRepository)
         {
             _logger = logger;
-            _usuarioRepository = usuarioRepository;
+            _usuarioRepository = usuarioRequestRepository;
+            _veiculoUsuarioRepository = veiculoUsuarioRepository;
+            _veiculoRepository = veiculoRepository;
         }
 
         [HttpGet]
         [AllowAnonymous]
         [Route("ReadUsuario")]
-        public IActionResult ReadUsuario([FromBody] Usuario usuario)
+        public IActionResult ReadUsuario([FromQuery] int IdUsuario)
         {
             try
             {  
-                var usuarioRetorno = _usuarioRepository.Read(usuario.Id);
-                if (usuarioRetorno.Id != -1)
+                var usuarioRequestRetorno = _usuarioRepository.Read(IdUsuario);
+                if (usuarioRequestRetorno.Id != -1)
                 {
-                    return Ok(usuarioRetorno);
+                    return Ok(usuarioRequestRetorno);
                 }
                 else
                 {
                 return BadRequest(new ErrorReturnDTO()
                 {
-                    Error = "Invalid usuario ID!",
+                    Error = "Usuário Inválido!",
                     StatusCode = StatusCodes.Status400BadRequest});
                 }                    
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -56,28 +61,28 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateUsuario")]
-        public IActionResult CreateUsuario([FromBody] Usuario usuario)
+        public IActionResult CreateUsuario([FromBody] UsuarioRequestDTO usuarioRequest)
         {
             try
             {
                 var errors = new List<string>();
-                if (string.IsNullOrEmpty(usuario.Nome) || string.IsNullOrWhiteSpace(usuario.Nome))
+                if (string.IsNullOrEmpty(usuarioRequest.Nome) || string.IsNullOrWhiteSpace(usuarioRequest.Nome))
                 {
-                    errors.Add("Invalid Name!");
+                    errors.Add("Nome Inválido!");
                 }
-                else if (string.IsNullOrEmpty(usuario.Email) || string.IsNullOrWhiteSpace(usuario.Email)
-                    || !Regex.IsMatch(usuario.Email, @"^([\w\.\-\+\d]+)@([\w\-]+)((\.(\w){2,3})+)$", RegexOptions.IgnoreCase))
+                else if (string.IsNullOrEmpty(usuarioRequest.Email) || string.IsNullOrWhiteSpace(usuarioRequest.Email)
+                    || !Regex.IsMatch(usuarioRequest.Email, @"^([\w\.\-\+\d]+)@([\w\-]+)((\.(\w){2,3})+)$", RegexOptions.IgnoreCase))
                 {
-                    errors.Add("Invalid Email!");
+                    errors.Add("Email inválido!");
                 }
-                else if (string.IsNullOrEmpty(usuario.Senha) || string.IsNullOrWhiteSpace(usuario.Senha)
-                    && !Regex.IsMatch(usuario.Senha, "[a-zA-Z0-9]+", RegexOptions.IgnoreCase) && usuario.Senha.Length < 8)
+                else if (string.IsNullOrEmpty(usuarioRequest.Senha) || string.IsNullOrWhiteSpace(usuarioRequest.Senha)
+                    && !Regex.IsMatch(usuarioRequest.Senha, "[a-zA-Z0-9]+", RegexOptions.IgnoreCase) && usuarioRequest.Senha.Length < 8)
                 {
-                    errors.Add("Invalid Password!");
+                    errors.Add("Senha inválida!");
                 }
-                else if (_usuarioRepository.CheckEmail(usuario.Email))
+                else if (_usuarioRepository.CheckEmail(usuarioRequest.Email))
                 {
-                    errors.Add("Email is already being used!");
+                    errors.Add("Email já está sendo utilizado!");
                 }
                 if (errors.Count > 0)
                 {
@@ -87,13 +92,20 @@ namespace priority_green_wave_api.Controllers
                         StatusCode = StatusCodes.Status400BadRequest
                     });
                 }
-                usuario.Senha = MD5Utils.GetHashMD5(usuario.Senha);
-                _usuarioRepository.Create(usuario);
-                return Ok(new { msg = "usuario created successfully!" });
+                Usuario usuario = new Usuario(nome: usuarioRequest.Nome,
+                                              cpf: usuarioRequest.Cpf,
+                                              dataNascimento: usuarioRequest.DataNascimento,
+                                              email: usuarioRequest.Email,
+                                              telefone: usuarioRequest.Telefone,
+                                              senha: MD5Utils.GetHashMD5(usuarioRequest.Senha),
+                                              motoristaEmergencia: usuarioRequest.MotoristaEmergencia);
+
+                int usuarioRequestId = _usuarioRepository.Create(usuario);
+                return Ok(new { msg = "usuarioRequest criado com sucesso! usuario ID: "+  usuarioRequestId.ToString()});
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex);
+                _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Error!",
@@ -143,7 +155,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, request);
+                _logger.LogError("Um erro ocorreu!", ex, request);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",
@@ -155,28 +167,28 @@ namespace priority_green_wave_api.Controllers
         [HttpPut]
         [AllowAnonymous]
         [Route("UpdateUsuario")]
-        public IActionResult UpdateUsuario([FromBody] Usuario usuario)
+        public IActionResult UpdateUsuario([FromBody] Usuario usuarioRequest)
         {
             try
             {
-                usuario.Senha = MD5Utils.GetHashMD5(usuario.Senha);
-                var usuarioDadosAntigos = _usuarioRepository.Read(usuario.Id);
+                usuarioRequest.Senha = MD5Utils.GetHashMD5(usuarioRequest.Senha);
+                var usuarioRequestDadosAntigos = _usuarioRepository.Read(usuarioRequest.Id);
                 
-                if(usuarioDadosAntigos.Id != -1)
+                if(usuarioRequestDadosAntigos.Id != -1)
                 {
-                    Usuario usuarioDadosNovos = new Usuario();
-                    usuarioDadosNovos.Id = usuarioDadosAntigos.Id;
+                    Usuario usuarioRequestDadosNovos = new Usuario();
+                    usuarioRequestDadosNovos.Id = usuarioRequestDadosAntigos.Id;
 
-                    usuarioDadosNovos.Nome = usuario.Nome != usuarioDadosAntigos.Nome ? usuario.Nome : usuarioDadosAntigos.Nome;
-                    usuarioDadosNovos.Cpf = usuario.Cpf != usuarioDadosAntigos.Cpf ? usuario.Cpf : usuarioDadosAntigos.Cpf;
-                    usuarioDadosNovos.DataNascimento = usuario.DataNascimento != usuarioDadosAntigos.DataNascimento ? usuario.DataNascimento : usuarioDadosAntigos.DataNascimento;
-                    usuarioDadosNovos.Telefone = usuario.Telefone != usuarioDadosAntigos.Telefone ? usuario.Telefone : usuarioDadosAntigos.Telefone;
-                    usuarioDadosNovos.Senha = usuario.Senha != usuarioDadosAntigos.Senha ? usuario.Senha : usuarioDadosAntigos.Senha;
-                    usuarioDadosNovos.MotoristaEmergencia = usuario.MotoristaEmergencia != usuarioDadosAntigos.MotoristaEmergencia ? usuario.MotoristaEmergencia : usuarioDadosAntigos.MotoristaEmergencia;
-                    usuarioDadosNovos.Email = (usuario.Email != usuarioDadosAntigos.Email) && (!_usuarioRepository.CheckEmail(usuario.Email)) ? usuario.Email : usuarioDadosAntigos.Email;
+                    usuarioRequestDadosNovos.Nome = usuarioRequest.Nome != usuarioRequestDadosAntigos.Nome ? usuarioRequest.Nome : usuarioRequestDadosAntigos.Nome;
+                    usuarioRequestDadosNovos.Cpf = usuarioRequest.Cpf != usuarioRequestDadosAntigos.Cpf ? usuarioRequest.Cpf : usuarioRequestDadosAntigos.Cpf;
+                    usuarioRequestDadosNovos.DataNascimento = usuarioRequest.DataNascimento != usuarioRequestDadosAntigos.DataNascimento ? usuarioRequest.DataNascimento : usuarioRequestDadosAntigos.DataNascimento;
+                    usuarioRequestDadosNovos.Telefone = usuarioRequest.Telefone != usuarioRequestDadosAntigos.Telefone ? usuarioRequest.Telefone : usuarioRequestDadosAntigos.Telefone;
+                    usuarioRequestDadosNovos.Senha = usuarioRequest.Senha != usuarioRequestDadosAntigos.Senha ? usuarioRequest.Senha : usuarioRequestDadosAntigos.Senha;
+                    usuarioRequestDadosNovos.MotoristaEmergencia = usuarioRequest.MotoristaEmergencia != usuarioRequestDadosAntigos.MotoristaEmergencia ? usuarioRequest.MotoristaEmergencia : usuarioRequestDadosAntigos.MotoristaEmergencia;
+                    usuarioRequestDadosNovos.Email = (usuarioRequest.Email != usuarioRequestDadosAntigos.Email) && (!_usuarioRepository.CheckEmail(usuarioRequest.Email)) ? usuarioRequest.Email : usuarioRequestDadosAntigos.Email;
 
-                    _usuarioRepository.Update(usuarioDadosNovos);
-                    return Ok(usuarioDadosNovos);
+                    _usuarioRepository.Update(usuarioRequestDadosNovos);
+                    return Ok(usuarioRequestDadosNovos);
                 }
                 else
                 {
@@ -185,10 +197,10 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, usuario);
+                _logger.LogError("Um erro ocorreu!", ex, usuarioRequest);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Ocorreu um erro no login!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }
@@ -197,24 +209,41 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteUsuario")]
-        public IActionResult DeleteUsuario([FromBody] Usuario usuario)
+        public IActionResult DeleteUsuario([FromQuery] int IdUsuario)
         {
             try
             {
-                var usuario_delete = _usuarioRepository.Read(usuario.Id);
-                if (usuario_delete.Id != -1)
+                var usuarioRequestDelete = _usuarioRepository.Read(IdUsuario);
+                
+                if (usuarioRequestDelete.Id != -1)
                 {
-                    _usuarioRepository.Delete(usuario_delete);
-                    return Ok(usuario_delete);
+                    var veiculosUsuario = _veiculoUsuarioRepository.ReadIdUsuario(IdUsuario);
+
+                    if(veiculosUsuario.Count < 0)
+                    {
+                        return BadRequest("Usuário não encontrado!");
+                    }
+                    else
+                    {
+                        foreach (VeiculoUsuario veiculoUsuario in veiculosUsuario)
+                        {
+                            var veiculo = _veiculoRepository.Read(veiculoUsuario.IdVeiculo);
+                            _veiculoRepository.Delete(veiculo);
+                            _veiculoUsuarioRepository.Delete(veiculoUsuario);
+                        }
+                        _usuarioRepository.Delete(usuarioRequestDelete);
+                        return Ok(usuarioRequestDelete);
+                    }              
+                    
                 }
                 else
                 {
-                    return BadRequest();
+                    return BadRequest("Usuário não encontrado!");
                 }               
             }
             catch (Exception ex)
             {
-                _logger.LogError("An error ocurred!", ex, usuario);
+                _logger.LogError("Um erro ocorreu!", ex, IdUsuario);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "An login error ocurred!",

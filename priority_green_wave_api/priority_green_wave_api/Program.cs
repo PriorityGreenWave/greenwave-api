@@ -13,6 +13,9 @@ builder.Services.AddDbContext<APIContext>(options => options.UseSqlServer(builde
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<UsuarioRepository>();
+builder.Services.AddScoped<VeiculoRepository>();
+builder.Services.AddScoped<CatadioptricoRepository>();
+builder.Services.AddScoped<VeiculoUsuarioRepository>();
 
 var encryptedKey = Encoding.ASCII.GetBytes(JWTKey.key);
 builder.Services.AddAuthentication(auth =>
@@ -37,11 +40,9 @@ builder.Services.AddCors();
 var app = builder.Build();
 
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+app.UseSwagger();
+app.UseSwaggerUI();
+
 
 app.UseRouting();
 

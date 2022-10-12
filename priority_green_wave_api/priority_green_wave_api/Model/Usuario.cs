@@ -11,5 +11,19 @@
         public string Senha { get; set; }
         public bool MotoristaEmergencia { get; set; }
 
+        public Usuario( string nome, string cpf, DateTime dataNascimento, string email, string telefone, string senha, bool motoristaEmergencia)
+        {
+            Nome = nome;
+            Cpf = cpf;
+            DataNascimento = dataNascimento;
+            Email = email;
+            Telefone = telefone;
+            Senha = senha;
+            MotoristaEmergencia = motoristaEmergencia;
+        }
+        public Usuario()
+        {
+
+        }
     }
 }
