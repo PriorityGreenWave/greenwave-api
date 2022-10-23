@@ -7,12 +7,14 @@ namespace priority_green_wave_api.Model
     {
         public int Id { get; set; }
         public string Logradouro { get; set; }
-        public int AreaID { get; set; }
         public int Numero { get; set; }
         public string Bairro { get; set; }
         public string Regional { get; set; }
         public string Cidade { get; set; }
         public string Estado { get; set; }
         public double DistanciaSemaforo { get; set; }
+        public double Latitude { get; set; }
+        public double Longitude { get; set; }
+
     }
 }

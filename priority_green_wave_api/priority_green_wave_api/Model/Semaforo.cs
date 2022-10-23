@@ -3,6 +3,7 @@
     public class Semaforo
     {
         public int Id { get; set; }
-        public Localizacao localizacao { get; set; }
+        public int IdLocalizacao { get; set; }
+        public string Nome { get; set; }
     }
 }

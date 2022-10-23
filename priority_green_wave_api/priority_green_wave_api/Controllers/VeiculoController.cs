@@ -152,7 +152,7 @@ namespace priority_green_wave_api.Controllers
                 _logger.LogError("Um erro ocorreu!", ex, veiculo);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Um erro ocorreu!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }
@@ -183,7 +183,7 @@ namespace priority_green_wave_api.Controllers
                 _logger.LogError("Um erro ocorreu!", ex, IdVeiculo);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Um erro ocorreu!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }
@@ -219,7 +219,7 @@ namespace priority_green_wave_api.Controllers
                 _logger.LogError("Um erro ocorreu!", ex);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Um erro ocorreu!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }

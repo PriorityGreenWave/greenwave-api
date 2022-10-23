@@ -16,6 +16,8 @@ builder.Services.AddScoped<UsuarioRepository>();
 builder.Services.AddScoped<VeiculoRepository>();
 builder.Services.AddScoped<CatadioptricoRepository>();
 builder.Services.AddScoped<VeiculoUsuarioRepository>();
+builder.Services.AddScoped<LocalizacaoRepository>();
+builder.Services.AddScoped<SemaforoRepository>();
 
 var encryptedKey = Encoding.ASCII.GetBytes(JWTKey.key);
 builder.Services.AddAuthentication(auth =>

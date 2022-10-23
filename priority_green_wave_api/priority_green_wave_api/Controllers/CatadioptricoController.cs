@@ -102,7 +102,7 @@ namespace priority_green_wave_api.Controllers
                 _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Um erro ocorreu!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }
@@ -131,7 +131,7 @@ namespace priority_green_wave_api.Controllers
                 _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
-                    Error = "An login error ocurred!",
+                    Error = "Um erro ocorreu!",
                     StatusCode = StatusCodes.Status500InternalServerError
                 });
             }
