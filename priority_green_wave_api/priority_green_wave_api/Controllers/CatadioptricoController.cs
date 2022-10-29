@@ -11,23 +11,28 @@ namespace priority_green_wave_api.Controllers
 {
     [ApiController]
     [Route("api/[controller]/")]
-    public class CatadioptricoController : ControllerBase
+    public class CatadioptricoController : BaseController
     {
         private readonly ILogger<CatadioptricoController> _logger;
         private readonly CatadioptricoRepository _catadioptricoRepository;
-        public CatadioptricoController(ILogger<CatadioptricoController> logger, CatadioptricoRepository catadioptricoRepository)
+        private readonly LocalizacaoCatadioptricoRepository _localizacaoCatadioptricoRepository;
+        private readonly LocalizacaoRepository _localizacaoRepository;
+        public CatadioptricoController(ILogger<CatadioptricoController> logger, CatadioptricoRepository catadioptricoRepository, LocalizacaoCatadioptricoRepository localizacaoCatadioptricoRepository, LocalizacaoRepository localizacaoRepository)
         {
             _logger = logger;
             _catadioptricoRepository = catadioptricoRepository;
+            _localizacaoCatadioptricoRepository = localizacaoCatadioptricoRepository;
+            _localizacaoRepository = localizacaoRepository;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("ReadCatadioptrico")]
-        public IActionResult ReadCatadioptrico([FromBody] Catadioptrico catadioptrico)
+        public IActionResult ReadCatadioptrico([FromQuery] int idcatadioptrico)
         {
             try
             {
-                var retornoCatadioptrico = _catadioptricoRepository.Read(catadioptrico.Id);
+                var retornoCatadioptrico = _catadioptricoRepository.Read(idcatadioptrico);
                 if(retornoCatadioptrico.Id != -1)
                 {
                     return Ok(retornoCatadioptrico);
@@ -56,12 +61,40 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateCatadioptrico")]
-        public IActionResult CreateCatadioptrico([FromBody] Catadioptrico catadioptrico)
+        public IActionResult CreateCatadioptrico([FromBody] CatadioptricoRequestDTO catadioptricoRequest)
         {
             try
             {
-                _catadioptricoRepository.Create(catadioptrico);
-                return Ok(new { msg = "catadioptrico created successfully!" });
+                
+                Catadioptrico novoCatadioptrico = new Catadioptrico();
+                LocalizacaoCatadioptrico novalocalizacaoCatadioptrico = new LocalizacaoCatadioptrico();
+              
+                var localizacao = _localizacaoRepository.Read(catadioptricoRequest.IdLocalizacao);
+                var erros = new List<string>();
+
+                
+                if (localizacao.Id == -1)
+                {
+                    erros.Add("Localização não cadastrada na base");
+                }
+                if (erros.Count > 0)
+                {
+                    return BadRequest(new ErrorReturnDTO()
+                    {
+                        Errors = erros,
+                        StatusCode = StatusCodes.Status400BadRequest
+                    });
+                }
+                else
+                {
+                    novoCatadioptrico.Nome = catadioptricoRequest.Nome;
+                    
+                    novalocalizacaoCatadioptrico.IdCatadioptrico = _catadioptricoRepository.Create(novoCatadioptrico);
+                    novalocalizacaoCatadioptrico.IdLocalizacao = localizacao.Id;
+
+                    _localizacaoCatadioptricoRepository.Create(novalocalizacaoCatadioptrico);
+                    return Ok(novalocalizacaoCatadioptrico);
+                }
             }
             catch (Exception ex)
             {
@@ -77,29 +110,60 @@ namespace priority_green_wave_api.Controllers
         [HttpPut]
         [AllowAnonymous]
         [Route("UpdateCatadioptrico")]
-        public IActionResult UpdateCatadioptrico([FromBody] Catadioptrico catadioptrico)
+        public IActionResult UpdateCatadioptrico([FromBody] CatadioptricoUpdateDTO catadioptricoUpdate)
         {
             try
             {
-                var catadioptricoAntigo = _catadioptricoRepository.Read(catadioptrico.Id);
-                if(catadioptricoAntigo.Id != -1)
-                {
-                    Catadioptrico catadioptricoNovo = new Catadioptrico();
+                var localizacao = _localizacaoRepository.Read(catadioptricoUpdate.IdLocalizacao);
+                var catadioptricoAntigo = _catadioptricoRepository.Read(catadioptricoUpdate.Id);
+                
+                var erros = new List<string>();
 
-                    catadioptricoNovo.Id = catadioptricoAntigo.Id;
-                    
-                    _catadioptricoRepository.Update(catadioptricoNovo);
-                    return Ok(catadioptricoNovo);
+
+                if (localizacao.Id == -1)
+                {
+                    erros.Add("Localização não cadastrada na base");
+                }
+                if(catadioptricoAntigo.Id == -1){
+                    erros.Add("Catadioptrico não cadastrado na base");
+                }
+                if (erros.Count > 0)
+                {
+                    return BadRequest(new ErrorReturnDTO()
+                    {
+                        Errors = erros,
+                        StatusCode = StatusCodes.Status400BadRequest
+                    });
                 }
                 else
                 {
-                    return BadRequest();
+                    var catadioptricoLocalizacaoAntigo = _localizacaoCatadioptricoRepository.ReadLocalizacaoCatadioptrico(catadioptricoUpdate.Id);
+                    Catadioptrico catadioptricoNovo = new Catadioptrico();
+                    LocalizacaoCatadioptrico localizacaoCatadioptricoNovo = new LocalizacaoCatadioptrico();
+
+                    localizacaoCatadioptricoNovo.Id = catadioptricoLocalizacaoAntigo.Id;
+                    localizacaoCatadioptricoNovo.IdCatadioptrico = catadioptricoLocalizacaoAntigo.IdCatadioptrico;
+                    localizacaoCatadioptricoNovo.IdLocalizacao = catadioptricoLocalizacaoAntigo.IdLocalizacao;
+
+                    if (catadioptricoLocalizacaoAntigo.IdLocalizacao != localizacao.Id)
+                    {
+
+                        localizacaoCatadioptricoNovo.IdLocalizacao = localizacao.Id;
+                        _localizacaoCatadioptricoRepository.Update(localizacaoCatadioptricoNovo);
+                    }
+                        
+                    catadioptricoNovo.Id = catadioptricoAntigo.Id;
+                    catadioptricoNovo.Nome = catadioptricoUpdate.Nome;
+                              
+                    _catadioptricoRepository.Update(catadioptricoNovo);
+                    return Ok(localizacaoCatadioptricoNovo);                
                 }
+                
                 
             }
             catch (Exception ex)
             {
-                _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
+                _logger.LogError("Um erro ocorreu!", ex, catadioptricoUpdate);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Um erro ocorreu!",
@@ -111,13 +175,15 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteCatadioptrico")]
-        public IActionResult DeleteCatadioptrico([FromBody] Catadioptrico catadioptrico)
+        public IActionResult DeleteCatadioptrico([FromQuery] int idcatadioptrico)
         {
             try
             {
-                var catadioptrico_delete = _catadioptricoRepository.Read(catadioptrico.Id);
+                var catadioptrico_delete = _catadioptricoRepository.Read(idcatadioptrico);
                 if (catadioptrico_delete.Id != -1)
                 {
+                    var localizacaoCatadioptrico = _localizacaoCatadioptricoRepository.ReadCatadioptrico(idcatadioptrico);
+                    _localizacaoCatadioptricoRepository.Delete(localizacaoCatadioptrico);        
                     _catadioptricoRepository.Delete(catadioptrico_delete);
                     return Ok(catadioptrico_delete);
                 }
@@ -128,7 +194,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("Um erro ocorreu!", ex, catadioptrico);
+                _logger.LogError("Um erro ocorreu!", ex, idcatadioptrico);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Um erro ocorreu!",

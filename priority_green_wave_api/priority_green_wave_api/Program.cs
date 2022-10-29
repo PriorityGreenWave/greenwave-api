@@ -12,12 +12,16 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<APIContext>(options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+builder.Services.AddScoped<CatadioptricoRepository>();
+builder.Services.AddScoped<LocalizacaoCatadioptricoRepository>();
+builder.Services.AddScoped<LocalizacaoRepository>();
+builder.Services.AddScoped<LocalizacaoSemaforoRepository>();
+builder.Services.AddScoped<SemaforoRepository>();
 builder.Services.AddScoped<UsuarioRepository>();
 builder.Services.AddScoped<VeiculoRepository>();
-builder.Services.AddScoped<CatadioptricoRepository>();
 builder.Services.AddScoped<VeiculoUsuarioRepository>();
-builder.Services.AddScoped<LocalizacaoRepository>();
-builder.Services.AddScoped<SemaforoRepository>();
+
 
 var encryptedKey = Encoding.ASCII.GetBytes(JWTKey.key);
 builder.Services.AddAuthentication(auth =>

@@ -11,10 +11,11 @@ namespace priority_green_wave_api.Repository
         {
             _context = context;
         }
-        public void Create(Catadioptrico catadioptrico)
+        public int Create(Catadioptrico catadioptrico)
         {
             _context.catadioptrico.Add(catadioptrico);
             _context.SaveChanges();
+            return catadioptrico.Id;
         }
         public Catadioptrico Read(int id)
         {
@@ -23,11 +24,7 @@ namespace priority_green_wave_api.Repository
 
             if (catadioptrico != null)
             {
-                return new Catadioptrico()
-                {
-                    Id = catadioptrico.Id,
-                    
-                };
+                return catadioptrico;
             }
             else
             {

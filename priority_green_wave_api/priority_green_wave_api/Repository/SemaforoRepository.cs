@@ -10,10 +10,11 @@ namespace priority_green_wave_api.Repository
         {
             _context = context;
         }
-        public void Create(Semaforo semaforo)
+        public int Create(Semaforo semaforo)
         {
             _context.semaforo.Add(semaforo);
             _context.SaveChanges();
+            return semaforo.Id;
         }
         public Semaforo Read(int id)
         {
@@ -22,11 +23,7 @@ namespace priority_green_wave_api.Repository
 
             if (semaforo != null)
             {
-                return new Semaforo()
-                {
-                    Id = semaforo.Id,
-
-                };
+                return semaforo;
             }
             else
             {

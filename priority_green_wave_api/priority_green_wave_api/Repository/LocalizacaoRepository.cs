@@ -10,10 +10,11 @@ namespace priority_green_wave_api.Repository
         {
             _context = context;
         }
-        public void Create(Localizacao localizacao)
+        public int Create(Localizacao localizacao)
         {
             _context.localizacao.Add(localizacao);
             _context.SaveChanges();
+            return localizacao.Id;
         }
         public Localizacao Read(int id)
         {
@@ -22,11 +23,7 @@ namespace priority_green_wave_api.Repository
 
             if (localizacao != null)
             {
-                return new Localizacao()
-                {
-                    Id = localizacao.Id,
-
-                };
+                return localizacao;
             }
             else
             {
@@ -47,5 +44,6 @@ namespace priority_green_wave_api.Repository
             _context.localizacao.Remove(localizacao);
             _context.SaveChanges();
         }
-    }
+        
+    } 
 }

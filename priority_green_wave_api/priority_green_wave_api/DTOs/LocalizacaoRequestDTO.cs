@@ -1,11 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
-
-namespace priority_green_wave_api.Model
+﻿namespace priority_green_wave_api.DTOs
 {
-    public class Localizacao
+    public class LocalizacaoRequestDTO
     {
-        public int Id { get; set; }
         public string Logradouro { get; set; }
         public int Numero { get; set; }
         public int Area { get; set; }
@@ -16,6 +12,5 @@ namespace priority_green_wave_api.Model
         public double DistanciaSemaforo { get; set; }
         public double Latitude { get; set; }
         public double Longitude { get; set; }
-
     }
 }

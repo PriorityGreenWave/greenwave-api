@@ -6,23 +6,34 @@ using priority_green_wave_api.Repository;
 
 namespace priority_green_wave_api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]/")]
     public class LocalizacaoController : BaseController
     {
         private readonly ILogger<LocalizacaoController> _logger;
         private readonly LocalizacaoRepository _localizacaoRepository;
-        public LocalizacaoController(ILogger<LocalizacaoController> logger, LocalizacaoRepository localizacaoRepository)
+        private readonly SemaforoRepository _semaforoRepository;
+        private readonly CatadioptricoRepository _catadioptricoRepository;
+        private readonly LocalizacaoCatadioptricoRepository _localizacaoCatadioptricoRepository;
+        private readonly LocalizacaoSemaforoRepository _localizacaoSemaforoRepository;
+        public LocalizacaoController(ILogger<LocalizacaoController> logger, LocalizacaoRepository localizacaoRepository, LocalizacaoCatadioptricoRepository localizacaoCatadioptricoRepository, LocalizacaoSemaforoRepository localizacaoSemaforoRepository, SemaforoRepository semaforoRepository, CatadioptricoRepository catadioptricoRepository)
         {
             _logger = logger;
             _localizacaoRepository = localizacaoRepository;
+            _localizacaoCatadioptricoRepository = localizacaoCatadioptricoRepository;
+            _localizacaoSemaforoRepository = localizacaoSemaforoRepository;
+            _semaforoRepository = semaforoRepository;
+            _catadioptricoRepository = catadioptricoRepository;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("ReadLocalizacao")]
-        public IActionResult ReadLocalizacao([FromBody] Localizacao localizacao)
+        public IActionResult ReadLocalizacao([FromQuery] int idlocalizacao)
         {
             try
             {
-                var retornoLocalizacao = _localizacaoRepository.Read(localizacao.Id);
+                var retornoLocalizacao = _localizacaoRepository.Read(idlocalizacao);
                 if (retornoLocalizacao.Id != -1)
                 {
                     return Ok(retornoLocalizacao);
@@ -51,12 +62,24 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateLocalizacao")]
-        public IActionResult CreateLocalizacao([FromBody] Localizacao localizacao)
+        public IActionResult CreateLocalizacao([FromBody] LocalizacaoRequestDTO localizacao)
         {
             try
             {
-                _localizacaoRepository.Create(localizacao);
-                return Ok(new { msg = "localizacao created successfully!" });
+                Localizacao localizacaoNovo = new Localizacao();
+                localizacaoNovo.Logradouro = localizacao.Logradouro;
+                localizacaoNovo.Numero = localizacao.Numero;
+                localizacaoNovo.Bairro = localizacao.Bairro;
+                localizacaoNovo.Regional = localizacao.Regional;
+                localizacaoNovo.Area = localizacao.Area;
+                localizacaoNovo.Cidade = localizacao.Cidade;
+                localizacaoNovo.Estado = localizacao.Estado;
+                localizacaoNovo.DistanciaSemaforo = localizacao.DistanciaSemaforo;
+                localizacaoNovo.Latitude = localizacao.Latitude;
+                localizacaoNovo.Longitude = localizacao.Longitude;
+
+                int idLocalizacao = _localizacaoRepository.Create(localizacaoNovo);
+                return Ok(localizacaoNovo);
             }
             catch (Exception ex)
             {
@@ -116,24 +139,49 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteLocalizacao")]
-        public IActionResult DeleteLocalizacao([FromBody] Localizacao localizacao)
+        public IActionResult DeleteLocalizacao([FromQuery] int IdLocalizacao)
         {
             try
             {
-                var localizacao_delete = _localizacaoRepository.Read(localizacao.Id);
-                if (localizacao_delete.Id != -1)
+                var localizacaoRequestDelete = _localizacaoRepository.Read(IdLocalizacao);
+
+                if (localizacaoRequestDelete.Id != -1)
                 {
-                    _localizacaoRepository.Delete(localizacao_delete);
-                    return Ok(localizacao_delete);
+                    var localizacaoCatadioptrico = _localizacaoCatadioptricoRepository.ReadListaLocalizacao(IdLocalizacao);
+
+                    if(localizacaoCatadioptrico.Count() > 0)
+                    {
+                        foreach (LocalizacaoCatadioptrico localizacao in localizacaoCatadioptrico)
+                        {
+                            var catadioptrico = _catadioptricoRepository.Read(localizacao.IdCatadioptrico);
+                            _catadioptricoRepository.Delete(catadioptrico);
+                            _localizacaoCatadioptricoRepository.Delete(localizacao);
+                        }
+                    }
+
+                    var localizacaoSemaforo = _localizacaoSemaforoRepository.ReadListaLocalizacao(IdLocalizacao);
+
+                    if (localizacaoSemaforo.Count() > 0)
+                    {
+                        foreach (LocalizacaoSemaforo localizacao in localizacaoSemaforo)
+                        {
+                            var semaforo = _semaforoRepository.Read(localizacao.IdSemaforo);
+                            _semaforoRepository.Delete(semaforo);
+                            _localizacaoSemaforoRepository.Delete(localizacao);
+                        }
+                    }
+
+                    _localizacaoRepository.Delete(localizacaoRequestDelete);
+                    return Ok(localizacaoRequestDelete);    
                 }
                 else
                 {
-                    return BadRequest();
+                    return BadRequest("Usuário não encontrado!");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError("Um erro ocorreu!", ex, localizacao);
+                _logger.LogError("Um erro ocorreu!", ex, IdLocalizacao);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Um erro ocorreu!",

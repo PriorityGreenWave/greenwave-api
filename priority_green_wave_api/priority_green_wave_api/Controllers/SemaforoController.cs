@@ -6,23 +6,30 @@ using priority_green_wave_api.Repository;
 
 namespace priority_green_wave_api.Controllers
 {
+    [ApiController]
+    [Route("api/[controller]/")]
     public class SemaforoController : BaseController
     {
         private readonly ILogger<SemaforoController> _logger;
         private readonly SemaforoRepository _semaforoRepository;
-        public SemaforoController(ILogger<SemaforoController> logger, SemaforoRepository semaforoRepository)
+        private readonly LocalizacaoRepository _localizacaoRepository;
+        private readonly LocalizacaoSemaforoRepository _localizacaoSemaforoRepository;
+        public SemaforoController(ILogger<SemaforoController> logger, SemaforoRepository semaforoRepository, LocalizacaoRepository localizacaoRepository, LocalizacaoSemaforoRepository localizacaoSemaforoRepository)
         {
             _logger = logger;
             _semaforoRepository = semaforoRepository ?? throw new ArgumentNullException(nameof(semaforoRepository));
+            _localizacaoRepository = localizacaoRepository;
+            _localizacaoSemaforoRepository = localizacaoSemaforoRepository;
         }
 
         [HttpGet]
+        [AllowAnonymous]
         [Route("ReadSemaforo")]
-        public IActionResult ReadSemaforo([FromBody] Semaforo semaforo)
+        public IActionResult ReadSemaforo([FromQuery] int idsemaforo)
         {
             try
             {
-                var retornoSemaforo = _semaforoRepository.Read(semaforo.Id);
+                var retornoSemaforo = _semaforoRepository.Read(idsemaforo);
                 if (retornoSemaforo.Id != -1)
                 {
                     return Ok(retornoSemaforo);
@@ -51,12 +58,37 @@ namespace priority_green_wave_api.Controllers
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateSemaforo")]
-        public IActionResult CreateSemaforo([FromBody] Semaforo semaforo)
+        public IActionResult CreateSemaforo([FromBody] SemaforoRequestDTO semaforoRequest)
         {
             try
             {
-                _semaforoRepository.Create(semaforo);
-                return Ok(new { msg = "semaforo created successfully!" });
+                Semaforo novoSemaforo = new Semaforo();
+                LocalizacaoSemaforo novalocalizacaoSemaforo = new LocalizacaoSemaforo();
+
+                var localizacao = _localizacaoRepository.Read(semaforoRequest.IdLocalizacao);
+                var erros = new List<string>();
+                if (localizacao.Id == -1)
+                {
+                    erros.Add("Localização não cadastrada na base");
+                }
+                if (erros.Count > 0)
+                {
+                    return BadRequest(new ErrorReturnDTO()
+                    {
+                        Errors = erros,
+                        StatusCode = StatusCodes.Status400BadRequest
+                    });
+                }
+                else
+                {
+                    novoSemaforo.Nome = semaforoRequest.Nome;
+
+                    novalocalizacaoSemaforo.IdSemaforo = _semaforoRepository.Create(novoSemaforo);
+                    novalocalizacaoSemaforo.IdLocalizacao = localizacao.Id;
+
+                    _localizacaoSemaforoRepository.Create(novalocalizacaoSemaforo);
+                    return Ok(novalocalizacaoSemaforo);
+                }
             }
             catch (Exception ex)
             {
@@ -72,31 +104,61 @@ namespace priority_green_wave_api.Controllers
         [HttpPut]
         [AllowAnonymous]
         [Route("UpdateSemaforo")]
-        public IActionResult UpdateSemaforo([FromBody] Semaforo semaforo)
+        public IActionResult UpdateSemaforo([FromBody] SemaforoUpdateDTO semaforoUpdate)
         {
             try
             {
-                var semaforoAntigo = _semaforoRepository.Read(semaforo.Id);
-                if (semaforoAntigo.Id != -1)
+                var localizacao = _localizacaoRepository.Read(semaforoUpdate.IdLocalizacao);
+                var semaforoAntigo = _semaforoRepository.Read(semaforoUpdate.Id);
+
+                var erros = new List<string>();
+
+
+                if (localizacao.Id == -1)
                 {
-                    Semaforo semaforoNovo = new Semaforo();
-
-                    semaforoNovo.Id = semaforoAntigo.Id;
-                    semaforoNovo.IdLocalizacao = semaforo.IdLocalizacao != semaforoAntigo.IdLocalizacao ? semaforo.IdLocalizacao : semaforoAntigo.IdLocalizacao;
-                    semaforoNovo.Nome = semaforo.Nome != semaforoAntigo.Nome ? semaforo.Nome : semaforoAntigo.Nome;
-
-                    _semaforoRepository.Update(semaforoNovo);
-                    return Ok(semaforoNovo);
+                    erros.Add("Localização não cadastrada na base");
+                }
+                if (semaforoAntigo.Id == -1)
+                {
+                    erros.Add("Semaforo não cadastrado na base");
+                }
+                if (erros.Count > 0)
+                {
+                    return BadRequest(new ErrorReturnDTO()
+                    {
+                        Errors = erros,
+                        StatusCode = StatusCodes.Status400BadRequest
+                    });
                 }
                 else
                 {
-                    return BadRequest();
+                    var semaforoLocalizacaoAntigo = _localizacaoSemaforoRepository.ReadLocalizacaoSemaforo(semaforoUpdate.Id);
+                    
+                    Semaforo semaforoNovo = new Semaforo();
+                    LocalizacaoSemaforo localizacaoSemaforoNovo = new LocalizacaoSemaforo();
+
+                    localizacaoSemaforoNovo.Id = semaforoLocalizacaoAntigo.Id;
+                    localizacaoSemaforoNovo.IdSemaforo = semaforoLocalizacaoAntigo.IdSemaforo;
+                    localizacaoSemaforoNovo.IdLocalizacao = semaforoLocalizacaoAntigo.IdLocalizacao;
+
+                    if (semaforoLocalizacaoAntigo.IdLocalizacao != localizacao.Id)
+                    {
+
+                        localizacaoSemaforoNovo.IdLocalizacao = localizacao.Id;
+                        _localizacaoSemaforoRepository.Update(localizacaoSemaforoNovo);
+                    }
+
+                    semaforoNovo.Id = semaforoAntigo.Id;
+                    semaforoNovo.Nome = semaforoUpdate.Nome;
+
+                    _semaforoRepository.Update(semaforoNovo);
+                    return Ok(localizacaoSemaforoNovo);
                 }
 
             }
             catch (Exception ex)
             {
-                _logger.LogError("Um erro ocorreu!", ex, semaforo);
+                _logger.LogError("Um erro ocorreu!", ex, semaforoUpdate);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Um erro ocorreu!",
@@ -108,13 +170,15 @@ namespace priority_green_wave_api.Controllers
         [HttpDelete]
         [AllowAnonymous]
         [Route("DeleteSemaforo")]
-        public IActionResult DeleteSemaforo([FromBody] Semaforo semaforo)
+        public IActionResult DeleteSemaforo([FromQuery] int idsemaforo)
         {
             try
             {
-                var semaforo_delete = _semaforoRepository.Read(semaforo.Id);
+                var semaforo_delete = _semaforoRepository.Read(idsemaforo);
                 if (semaforo_delete.Id != -1)
                 {
+                    var localizacaoSemaforo = _localizacaoSemaforoRepository.ReadSemaforo(idsemaforo);
+                    _localizacaoSemaforoRepository.Delete(localizacaoSemaforo);      
                     _semaforoRepository.Delete(semaforo_delete);
                     return Ok(semaforo_delete);
                 }
@@ -125,7 +189,7 @@ namespace priority_green_wave_api.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError("Um erro ocorreu!", ex, semaforo);
+                _logger.LogError("Um erro ocorreu!", ex, idsemaforo);
                 return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
                 {
                     Error = "Um erro ocorreu!",

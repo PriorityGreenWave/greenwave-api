@@ -219,22 +219,15 @@ namespace priority_green_wave_api.Controllers
                 {
                     var veiculosUsuario = _veiculoUsuarioRepository.ReadIdUsuario(IdUsuario);
 
-                    if(veiculosUsuario.Count < 0)
-                    {
-                        return BadRequest("Usuário não encontrado!");
-                    }
-                    else
-                    {
-                        foreach (VeiculoUsuario veiculoUsuario in veiculosUsuario)
-                        {
-                            var veiculo = _veiculoRepository.Read(veiculoUsuario.IdVeiculo);
-                            _veiculoRepository.Delete(veiculo);
-                            _veiculoUsuarioRepository.Delete(veiculoUsuario);
-                        }
-                        _usuarioRepository.Delete(usuarioRequestDelete);
-                        return Ok(usuarioRequestDelete);
-                    }              
                     
+                    foreach (VeiculoUsuario veiculoUsuario in veiculosUsuario)
+                    {
+                        var veiculo = _veiculoRepository.Read(veiculoUsuario.IdVeiculo);
+                        _veiculoRepository.Delete(veiculo);
+                        _veiculoUsuarioRepository.Delete(veiculoUsuario);
+                    }
+                    _usuarioRepository.Delete(usuarioRequestDelete);
+                    return Ok(usuarioRequestDelete);   
                 }
                 else
                 {

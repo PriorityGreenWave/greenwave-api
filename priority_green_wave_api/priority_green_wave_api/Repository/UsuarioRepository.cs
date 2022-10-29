@@ -55,7 +55,7 @@ namespace priority_green_wave_api.Repository
             _context.usuario.Remove(usuario);
             _context.SaveChanges();
         }
-        public bool CheckEmail(string email) => (_context.usuario.Any(user => user.Email == email));
+        public bool CheckEmail(string email) => _context.usuario.Any(user => user.Email == email);
         public Usuario CheckLogin(LoginRequestDTO request)
         {
             var usuario = _context.usuario.Where(usuario => usuario.Email == request.login && usuario.Senha == request.password).FirstOrDefault();
