@@ -56,6 +56,40 @@ namespace priority_green_wave_api.Controllers
             }
         }
 
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("{idUsuario}")]
+        public IActionResult GetVeiculoByIdUsuario([FromRoute] int idUsuario)
+        {
+            try
+            {
+                var user = _usuarioRepository.Read(idUsuario);
+                var retornoVeiculoUsuario = _veiculoUsuarioRepository.ReadIdUsuario(idUsuario);
+                if (user.Id != -1)
+                {
+                    return Ok(retornoVeiculoUsuario);
+                }
+                else
+                {
+                    return NotFound(new ErrorReturnDTO()
+                    {
+                        Error = "Usuário não existente!",
+                        StatusCode = StatusCodes.Status404NotFound
+                    });
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Um erro ocorreu!", ex);
+                return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
+                {
+                    Error = "Error!",
+                    StatusCode = StatusCodes.Status500InternalServerError
+                });
+            }
+        }
+
         [HttpPost]
         [AllowAnonymous]
         [Route("CreateVeiculo")]
