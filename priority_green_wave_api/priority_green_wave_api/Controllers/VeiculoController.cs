@@ -188,7 +188,47 @@ namespace priority_green_wave_api.Controllers
                 });
             }
         }
+        [HttpGet]
+        [AllowAnonymous]
+        [Route("AlterarEstadoEmergencia")]
+        public IActionResult AlterarEstadoEmergencia([FromQuery] int IdVeiculo)
+        {
+            try
+            {
+                var veiculoAntigo = _veiculoRepository.Read(IdVeiculo);
+                if (veiculoAntigo.Id != -1)
+                {
+                    Veiculo veiculoNovo = new Veiculo();
 
+                    veiculoNovo.Id = veiculoAntigo.Id;
+                    veiculoNovo.Placa = veiculoAntigo.Placa;
+                    veiculoNovo.Rfid = veiculoAntigo.Rfid;
+                    veiculoNovo.Fabricante = veiculoAntigo.Fabricante;
+                    veiculoNovo.Modelo = veiculoAntigo.Modelo;
+                    veiculoNovo.Ano =  veiculoAntigo.Ano;
+                    veiculoNovo.TipoVeiculo = veiculoAntigo.TipoVeiculo;
+                    veiculoNovo.VeiculoEmergencia = veiculoAntigo.VeiculoEmergencia;
+                    veiculoNovo.EstadoEmergencia = veiculoAntigo.EstadoEmergencia == true ? false : true;
+
+                    _veiculoRepository.Update(veiculoNovo);
+                    return Ok(veiculoNovo);
+                }
+                else
+                {
+                    return BadRequest();
+                }
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("Um erro ocorreu!", ex, IdVeiculo);
+                return this.StatusCode(StatusCodes.Status500InternalServerError, new ErrorReturnDTO()
+                {
+                    Error = "Um erro ocorreu!",
+                    StatusCode = StatusCodes.Status500InternalServerError
+                });
+            }
+        }
         [HttpGet]
         [AllowAnonymous]
         [Route("EstadoEmergencia")]

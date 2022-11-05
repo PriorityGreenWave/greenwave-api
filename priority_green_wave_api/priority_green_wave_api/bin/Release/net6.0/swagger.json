@@ -10,18 +10,12 @@
         "tags": [
           "Catadioptrico"
         ],
-        "consumes": [
-          "application/json",
-          "text/json",
-          "application/*+json"
-        ],
         "parameters": [
           {
-            "in": "body",
-            "name": "body",
-            "schema": {
-              "$ref": "#/definitions/Catadioptrico"
-            }
+            "in": "query",
+            "name": "idcatadioptrico",
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "responses": {
@@ -46,7 +40,7 @@
             "in": "body",
             "name": "body",
             "schema": {
-              "$ref": "#/definitions/Catadioptrico"
+              "$ref": "#/definitions/CatadioptricoRequestDTO"
             }
           }
         ],
@@ -72,7 +66,7 @@
             "in": "body",
             "name": "body",
             "schema": {
-              "$ref": "#/definitions/Catadioptrico"
+              "$ref": "#/definitions/CatadioptricoUpdateDTO"
             }
           }
         ],
@@ -88,6 +82,46 @@
         "tags": [
           "Catadioptrico"
         ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idcatadioptrico",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Localizacao/ReadLocalizacao": {
+      "get": {
+        "tags": [
+          "Localizacao"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idlocalizacao",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Localizacao/CreateLocalizacao": {
+      "post": {
+        "tags": [
+          "Localizacao"
+        ],
         "consumes": [
           "application/json",
           "text/json",
@@ -98,8 +132,146 @@
             "in": "body",
             "name": "body",
             "schema": {
-              "$ref": "#/definitions/Catadioptrico"
+              "$ref": "#/definitions/LocalizacaoRequestDTO"
             }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Localizacao/UpdateLocalizacao": {
+      "put": {
+        "tags": [
+          "Localizacao"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/Localizacao"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Localizacao/DeleteLocalizacao": {
+      "delete": {
+        "tags": [
+          "Localizacao"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "IdLocalizacao",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Semaforo/ReadSemaforo": {
+      "get": {
+        "tags": [
+          "Semaforo"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idsemaforo",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Semaforo/CreateSemaforo": {
+      "post": {
+        "tags": [
+          "Semaforo"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SemaforoRequestDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Semaforo/UpdateSemaforo": {
+      "put": {
+        "tags": [
+          "Semaforo"
+        ],
+        "consumes": [
+          "application/json",
+          "text/json",
+          "application/*+json"
+        ],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "schema": {
+              "$ref": "#/definitions/SemaforoUpdateDTO"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Semaforo/DeleteSemaforo": {
+      "delete": {
+        "tags": [
+          "Semaforo"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idsemaforo",
+            "type": "integer",
+            "format": "int32"
           }
         ],
         "responses": {
@@ -340,12 +512,115 @@
     }
   },
   "definitions": {
-    "Catadioptrico": {
+    "CatadioptricoRequestDTO": {
+      "type": "object",
+      "properties": {
+        "idLocalizacao": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "nome": {
+          "type": "string"
+        }
+      }
+    },
+    "CatadioptricoUpdateDTO": {
       "type": "object",
       "properties": {
         "id": {
           "format": "int32",
           "type": "integer"
+        },
+        "idLocalizacao": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "nome": {
+          "type": "string"
+        }
+      }
+    },
+    "Localizacao": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "logradouro": {
+          "type": "string"
+        },
+        "numero": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "area": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "bairro": {
+          "type": "string"
+        },
+        "regional": {
+          "type": "string"
+        },
+        "cidade": {
+          "type": "string"
+        },
+        "estado": {
+          "type": "string"
+        },
+        "distanciaSemaforo": {
+          "format": "double",
+          "type": "number"
+        },
+        "latitude": {
+          "format": "double",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "type": "number"
+        }
+      }
+    },
+    "LocalizacaoRequestDTO": {
+      "type": "object",
+      "properties": {
+        "logradouro": {
+          "type": "string"
+        },
+        "numero": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "area": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "bairro": {
+          "type": "string"
+        },
+        "regional": {
+          "type": "string"
+        },
+        "cidade": {
+          "type": "string"
+        },
+        "estado": {
+          "type": "string"
+        },
+        "distanciaSemaforo": {
+          "format": "double",
+          "type": "number"
+        },
+        "latitude": {
+          "format": "double",
+          "type": "number"
+        },
+        "longitude": {
+          "format": "double",
+          "type": "number"
         }
       }
     },
@@ -356,6 +631,34 @@
           "type": "string"
         },
         "password": {
+          "type": "string"
+        }
+      }
+    },
+    "SemaforoRequestDTO": {
+      "type": "object",
+      "properties": {
+        "idLocalizacao": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "nome": {
+          "type": "string"
+        }
+      }
+    },
+    "SemaforoUpdateDTO": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "idLocalizacao": {
+          "format": "int32",
+          "type": "integer"
+        },
+        "nome": {
           "type": "string"
         }
       }
