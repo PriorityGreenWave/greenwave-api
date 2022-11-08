@@ -58,8 +58,8 @@ namespace priority_green_wave_api.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        [Route("{idUsuario}")]
-        public IActionResult GetVeiculoByIdUsuario([FromRoute] int idUsuario)
+        [Route("GetVeiculoByIdUsuario")]
+        public IActionResult GetVeiculoByIdUsuario([FromQuery] int idUsuario)
         {
             try
             {

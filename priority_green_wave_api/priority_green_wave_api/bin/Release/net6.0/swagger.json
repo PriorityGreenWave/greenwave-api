@@ -419,6 +419,26 @@
         }
       }
     },
+    "/api/Veiculo/GetVeiculoByIdUsuario": {
+      "get": {
+        "tags": [
+          "Veiculo"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "idUsuario",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
     "/api/Veiculo/CreateVeiculo": {
       "post": {
         "tags": [
@@ -473,6 +493,26 @@
     },
     "/api/Veiculo/DeleteVeiculo": {
       "delete": {
+        "tags": [
+          "Veiculo"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "IdVeiculo",
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          }
+        }
+      }
+    },
+    "/api/Veiculo/AlterarEstadoEmergencia": {
+      "get": {
         "tags": [
           "Veiculo"
         ],
